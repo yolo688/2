@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>天气关怀 · 手机触发</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232E6B57'/%3E%3Cpath d='M22.5 8.5 13 19.2h4.2L12 25.5l7.8-11.6h-4.5z' fill='%23F7F3EB'/%3E%3C/svg%3E">
+<style>
+  :root{
+    --paper:#F7F3EB;
+    --card:#FFFDF8;
+    --ink:#26231E;
+    --muted:#7A7264;
+    --line:#E2DACA;
+    --accent:#2E6B57;
+    --accent-press:#245845;
+    --on-accent:#F4FAF6;
+    --warn:#8A3B2E;
+    --ok:#2E6B57;
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+    font-size:15px;
+    line-height:1.65;
+  }
+  .wrap{
+    max-width:520px;
+    margin:0 auto;
+    padding:26px 20px 40px;
+  }
+  h1{
+    font-family:Georgia,"Songti SC","STSong","SimSun",serif;
+    font-size:30px;
+    line-height:1.2;
+    font-weight:600;
+    letter-spacing:.02em;
+    margin:0 0 10px;
+  }
+  .lede{
+    color:var(--muted);
+    font-size:14px;
+    margin:0 0 24px;
+    max-width:32em;
+  }
+  .rule{
+    height:1px;
+    background:var(--line);
+    border:0;
+    margin:22px 0;
+  }
+  .actions{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:10px;
+  }
+  .btn{
+    min-height:52px;
+    width:100%;
+    border-radius:10px;
+    border:1px solid transparent;
+    font:inherit;
+    font-size:16px;
+    font-weight:600;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:9px;
+    cursor:pointer;
+    transition:background-color .16s ease, transform .08s ease;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .btn:active{transform:translateY(1px)}
+  .btn[disabled]{opacity:.55;cursor:not-allowed}
+  .btn-primary{
+    background:var(--accent);
+    color:var(--on-accent);
+  }
+  .btn-primary:active{background:var(--accent-press)}
+  .btn-ghost{
+    background:var(--card);
+    color:var(--ink);
+    border-color:var(--line);
+  }
+  .btn svg{width:18px;height:18px;flex:0 0 auto}
+  .status{
+    margin-top:16px;
+    padding:12px 14px;
+    border:1px solid var(--line);
+    border-radius:10px;
+    background:var(--card);
+    font-size:14px;
+    color:var(--muted);
+    min-height:46px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+  }
+  .status-text{flex:1 1 auto;min-width:0}
+  .status-text.is-ok{color:var(--ok)}
+  .status-text.is-warn{color:var(--warn)}
+  .status a{
+    flex:0 0 auto;
+    color:var(--accent);
+    font-size:13px;
+    text-decoration:none;
+    border-bottom:1px solid rgba(46,107,87,.35);
+    padding-bottom:1px;
+  }
+  details{
+    margin-top:6px;
+    border:1px solid var(--line);
+    border-radius:10px;
+    background:var(--card);
+    padding:0 14px;
+  }
+  details[open]{padding-bottom:16px}
+  summary{
+    list-style:none;
+    cursor:pointer;
+    padding:14px 0;
+    font-weight:600;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    min-height:48px;
+  }
+  summary::-webkit-details-marker{display:none}
+  .chev{transition:transform .2s ease;flex:0 0 auto}
+  details[open] .chev{transform:rotate(180deg)}
+  .field{margin-top:14px}
+  .field label{
+    display:block;
+    font-size:13px;
+    color:var(--muted);
+    margin-bottom:6px;
+  }
+  .field input{
+    width:100%;
+    min-height:46px;
+    padding:11px 12px;
+    font-size:16px;
+    font-family:inherit;
+    color:var(--ink);
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:10px;
+    outline:none;
+  }
+  .field input:focus{
+    border-color:var(--accent);
+    box-shadow:0 0 0 3px rgba(46,107,87,.12);
+  }
+  .field .hint{
+    margin:6px 0 0;
+    font-size:12px;
+    color:var(--muted);
+  }
+  .field-row{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+  }
+  .save-row{
+    margin-top:18px;
+    display:flex;
+    align-items:center;
+    gap:12px;
+  }
+  .save-row .btn{width:auto;flex:0 0 auto;padding:0 20px;min-height:46px;font-size:15px}
+  .save-note{font-size:12px;color:var(--muted);flex:1 1 auto;min-width:0}
+  .howto{margin-top:26px}
+  .howto h2{
+    font-size:15px;
+    font-weight:600;
+    margin:0 0 10px;
+  }
+  .howto ol{
+    margin:0;
+    padding-left:1.2em;
+    color:var(--muted);
+    font-size:13.5px;
+  }
+  .howto li{margin-bottom:7px}
+  .howto code{
+    font-family:ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
+    font-size:12.5px;
+    background:rgba(46,107,87,.09);
+    padding:1px 5px;
+    border-radius:4px;
+    color:var(--accent-press);
+  }
+  .foot{
+    margin-top:28px;
+    font-size:12.5px;
+    color:var(--muted);
+    border-top:1px solid var(--line);
+    padding-top:14px;
+  }
+  @media (min-width:768px){
+    .wrap{padding:44px 24px 56px}
+    h1{font-size:36px}
+    .actions{grid-template-columns:1.4fr 1fr}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{transition:none !important}
+  }
+</style>
+</head>
+<body>
+<main class="wrap">
+  <h1>天气关怀</h1>
+  <p class="lede">点一下，云端立刻跑一次，内容推到微信。不用开着电脑，也不用等定时。</p>
+
+  <div class="actions">
+    <button class="btn btn-primary" id="btnSend" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 3 5 14h5l-1 7 8-11h-5l1-7z"/></svg>
+      现在推送
+    </button>
+    <button class="btn btn-ghost" id="btnPreview" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-6 10-6 10 6 10 6-3.6 6-10 6-10-6-10-6z"/><circle cx="12" cy="12" r="2.6"/></svg>
+      只看内容
+    </button>
+  </div>
+
+  <div class="status" role="status" aria-live="polite">
+    <span class="status-text" id="statusText">还没有触发过</span>
+    <a id="runLink" href="#" hidden target="_blank" rel="noopener">查看日志</a>
+  </div>
+
+  <hr class="rule">
+
+  <details id="settings">
+    <summary>
+      <span>连接设置</span>
+      <svg class="chev" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+    </summary>
+
+    <div class="field-row">
+      <div class="field">
+        <label for="owner">GitHub 用户名</label>
+        <input id="owner" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="your-name">
+      </div>
+      <div class="field">
+        <label for="repo">仓库名</label>
+        <input id="repo" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="daily-push">
+      </div>
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label for="branch">分支</label>
+        <input id="branch" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="main" value="main">
+      </div>
+      <div class="field">
+        <label for="workflow">工作流文件</label>
+        <input id="workflow" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="daily-push.yml" value="daily-push.yml">
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="token">访问令牌（PAT）</label>
+      <input id="token" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="github_pat_ 开头的那串">
+      <p class="hint">只存在这台手机的浏览器里，不会上传到别的地方。换手机或清缓存后要重新填。</p>
+    </div>
+
+    <div class="save-row">
+      <button class="btn btn-ghost" id="btnSave" type="button">保存设置</button>
+      <span class="save-note" id="saveNote">填一次就好</span>
+    </div>
+  </details>
+
+  <section class="howto">
+    <h2>第一次用，先做三件事</h2>
+    <ol>
+      <li>把 <code>push.py</code> 和 <code>.github/workflows/daily-push.yml</code> 传到你的私有仓库。</li>
+      <li>在仓库 <code>Settings → Secrets and variables → Actions</code> 里配好 5 个 Secret。</li>
+      <li>在 GitHub <code>Settings → Developer settings → Personal access tokens → Fine-grained tokens</code> 新建令牌，仓库只选这一个，权限勾上 <code>Actions: Read and write</code>，把生成的令牌填到上面。</li>
+    </ol>
+  </section>
+
+  <p class="foot">在手机浏览器里打开后，用「添加到主屏幕」存成图标，下次一点就开。</p>
+</main>
+
+<script>
+(function () {
+  var CFG_KEY = 'weatherPushCfg_v1';
+  var API = 'https://api.github.com';
+  var POLL_MAX = 24;
+  var POLL_GAP = 3000;
+
+  var els = {
+    owner: document.getElementById('owner'),
+    repo: document.getElementById('repo'),
+    branch: document.getElementById('branch'),
+    workflow: document.getElementById('workflow'),
+    token: document.getElementById('token'),
+    save: document.getElementById('btnSave'),
+    saveNote: document.getElementById('saveNote'),
+    send: document.getElementById('btnSend'),
+    preview: document.getElementById('btnPreview'),
+    status: document.getElementById('statusText'),
+    runLink: document.getElementById('runLink'),
+    settings: document.getElementById('settings')
+  };
+
+  var pollTimer = null;
+
+  function readCfg() {
+    try {
+      return JSON.parse(localStorage.getItem(CFG_KEY) || 'null');
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function writeCfg(cfg) {
+    localStorage.setItem(CFG_KEY, JSON.stringify(cfg));
+  }
+
+  function fillForm(cfg) {
+    if (!cfg) return;
+    if (cfg.owner) els.owner.value = cfg.owner;
+    if (cfg.repo) els.repo.value = cfg.repo;
+    if (cfg.branch) els.branch.value = cfg.branch;
+    if (cfg.workflow) els.workflow.value = cfg.workflow;
+    if (cfg.token) els.token.value = cfg.token;
+  }
+
+  function formCfg() {
+    return {
+      owner: els.owner.value.trim(),
+      repo: els.repo.value.trim(),
+      branch: els.branch.value.trim() || 'main',
+      workflow: els.workflow.value.trim() || 'daily-push.yml',
+      token: els.token.value.trim()
+    };
+  }
+
+  function cfgReady(cfg) {
+    return cfg && cfg.owner && cfg.repo && cfg.token;
+  }
+
+  function setStatus(text, tone, link) {
+    els.status.textContent = text;
+    els.status.className = 'status-text' + (tone ? ' is-' + tone : '');
+    if (link) {
+      els.runLink.href = link;
+      els.runLink.hidden = false;
+    } else {
+      els.runLink.hidden = true;
+    }
+  }
+
+  function busy(on) {
+    els.send.disabled = on;
+    els.preview.disabled = on;
+  }
+
+  function relTime(iso) {
+    var t = Date.parse(iso);
+    if (isNaN(t)) return '';
+    var diff = Math.floor((Date.now() - t) / 1000);
+    if (diff < 60) return '刚刚';
+    if (diff < 3600) return Math.floor(diff / 60) + ' 分钟前';
+    if (diff < 86400) return Math.floor(diff / 3600) + ' 小时前';
+    return Math.floor(diff / 86400) + ' 天前';
+  }
+
+  function gh(cfg, path, options) {
+    var opts = options || {};
+    var headers = {
+      'Accept': 'application/vnd.github+json',
+      'Authorization': 'Bearer ' + cfg.token,
+      'X-GitHub-Api-Version': '2022-11-28'
+    };
+    if (opts.body) headers['Content-Type'] = 'application/json';
+    return fetch(API + path, {
+      method: opts.method || 'GET',
+      headers: headers,
+      body: opts.body
+    }).then(function (res) {
+      if (res.status === 204) return null;
+      return res.text().then(function (text) {
+        var data = null;
+        try { data = text ? JSON.parse(text) : null; } catch (e) { data = null; }
+        if (!res.ok) {
+          var err = new Error(explain(res.status, data));
+          err.status = res.status;
+          throw err;
+        }
+        return data;
+      });
+    }).catch(function (err) {
+      if (err && err.status) throw err;
+      throw new Error('连不上 GitHub。如果这个页面是从手机里的本地文件打开的，多数自带浏览器会拦住联网请求，请用 https 链接打开这个页面。');
+    });
+  }
+
+  function explain(status, data) {
+    var msg = (data && data.message) ? '（' + data.message + '）' : '';
+    if (status === 401) return '令牌无效或已过期，重新生成一个再填进来 ' + msg;
+    if (status === 403) return '令牌权限不够，需要勾上 Actions: Read and write ' + msg;
+    if (status === 404) return '仓库或工作流没找到：检查用户名、仓库名、分支、工作流文件名 ' + msg;
+    if (status === 422) return '参数不对，通常是分支名写错了 ' + msg;
+    return '请求失败（HTTP ' + status + '）' + msg;
+  }
+
+  function runUrl(cfg, id) {
+    return 'https://github.com/' + cfg.owner + '/' + cfg.repo + '/actions/runs/' + id;
+  }
+
+  function latestRun(cfg) {
+    return gh(cfg, '/repos/' + cfg.owner + '/' + cfg.repo + '/actions/runs?event=workflow_dispatch&per_page=1')
+      .then(function (data) {
+        var runs = (data && data.workflow_runs) || [];
+        return runs.length ? runs[0] : null;
+      });
+  }
+
+  function renderRun(cfg, run) {
+    if (!run) {
+      setStatus('还没有触发过');
+      return;
+    }
+    var when = relTime(run.created_at);
+    var link = run.html_url || runUrl(cfg, run.id);
+    if (run.status === 'completed') {
+      if (run.conclusion === 'success') {
+        setStatus('上次：推送成功　' + when, 'ok', link);
+      } else {
+        setStatus('上次：执行失败（' + (run.conclusion || '未知') + '）　' + when, 'warn', link);
+      }
+    } else {
+      setStatus('云端正在执行：' + run.status + '　' + when, null, link);
+    }
+  }
+
+  function poll(cfg, round) {
+    round = round || 0;
+    latestRun(cfg).then(function (run) {
+      renderRun(cfg, run);
+      if (!run) {
+        if (round < POLL_MAX) {
+          pollTimer = setTimeout(function () { poll(cfg, round + 1); }, POLL_GAP);
+        } else {
+          setStatus('触发命令已发出，但还没看到新的运行记录，稍后去日志里看看', 'warn', 'https://github.com/' + cfg.owner + '/' + cfg.repo + '/actions');
+        }
+        return;
+      }
+      if (run.status === 'completed') return;
+      if (round < POLL_MAX) {
+        pollTimer = setTimeout(function () { poll(cfg, round + 1); }, POLL_GAP);
+      } else {
+        setStatus('执行时间有点长，点日志查看进度', null, run.html_url);
+      }
+    }).catch(function (err) {
+      setStatus(err.message, 'warn');
+    });
+  }
+
+  function trigger(previewOnly) {
+    var cfg = formCfg();
+    if (!cfgReady(cfg)) {
+      els.settings.open = true;
+      setStatus('先把连接设置填好：用户名、仓库名、令牌', 'warn');
+      els.owner.focus();
+      return;
+    }
+    writeCfg(cfg);
+    if (pollTimer) clearTimeout(pollTimer);
+    busy(true);
+    setStatus(previewOnly ? '正在让云端只预览一次…' : '正在让云端推送…');
+
+    gh(cfg, '/repos/' + cfg.owner + '/' + cfg.repo + '/actions/workflows/' + cfg.workflow + '/dispatches', {
+      method: 'POST',
+      body: JSON.stringify({
+        ref: cfg.branch,
+        inputs: { preview_only: previewOnly ? 'true' : 'false' }
+      })
+    }).then(function () {
+      setStatus('已触发，云端开始执行…');
+      poll(cfg, 0);
+    }).catch(function (err) {
+      busy(false);
+      setStatus(err.message, 'warn');
+    });
+  }
+
+  function onSave() {
+    var cfg = formCfg();
+    if (!cfgReady(cfg)) {
+      setStatus('用户名、仓库名、令牌三项都要填', 'warn');
+      els.settings.open = true;
+      return;
+    }
+    writeCfg(cfg);
+    els.saveNote.textContent = '已保存到这台手机';
+    els.settings.open = false;
+    setStatus('设置已保存，可以点了');
+    latestRun(cfg).then(function (run) { renderRun(cfg, run); }).catch(function () {});
+  }
+
+  els.send.addEventListener('click', function () { trigger(false); });
+  els.preview.addEventListener('click', function () { trigger(true); });
+  els.save.addEventListener('click', onSave);
+
+  var saved = readCfg();
+  if (saved) {
+    fillForm(saved);
+    if (cfgReady(saved)) {
+      setStatus('设置已就绪，点上面的按钮就能触发');
+      latestRun(saved).then(function (run) { renderRun(saved, run); }).catch(function (err) {
+        setStatus(err.message, 'warn');
+      });
+    }
+  } else {
+    els.settings.open = true;
+    els.saveNote.textContent = '填一次就好，之后直接点按钮';
+  }
+})();
+</script>
+</body>
+</html>
